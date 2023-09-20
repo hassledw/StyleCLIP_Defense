@@ -22,6 +22,8 @@ git clone git@github.com:hassledw/StyleCLIP_Defense.git
 
 ### StyleCLIP
 ```
+# Reference: https://github.com/orpatashnik/StyleCLIP
+
 git clone https://github.com/orpatashnik/StyleCLIP.git
 conda install --yes -c pytorch pytorch=1.7.1 torchvision cudatoolkit=<CUDA_VERSION>
 pip install ftfy regex tqdm gdown
@@ -30,4 +32,10 @@ pip install git+https://github.com/openai/CLIP.git
 pip install tensorboard
 cd StyleCLIP
 mkdir pretrained_models && cd pretrained_models
+wget https://www.dropbox.com/s/kzo52d9neybjxsb/model_ir_se50.pth?dl=0 -O model_ir_se50.pth
+wget https://huggingface.co/akhaliq/jojogan-stylegan2-ffhq-config-f/resolve/main/stylegan2-ffhq-config-f.pt
+
+# download the train_face dataset and test_face dataset
+cd ../mapper
+
 ```
