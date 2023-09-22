@@ -34,8 +34,8 @@ cd StyleCLIP
 mkdir pretrained_models && cd pretrained_models
 wget https://www.dropbox.com/s/kzo52d9neybjxsb/model_ir_se50.pth?dl=0 -O model_ir_se50.pth
 wget https://huggingface.co/akhaliq/jojogan-stylegan2-ffhq-config-f/resolve/main/stylegan2-ffhq-config-f.pt
+(move the train_faces.pt and test_faces.pt from downloads into VSCode ./mappers folder... seems to be the easiest way)
 
-# download the train_face dataset and test_face dataset
 cd ../mapper
-
+python ./scripts/train.py --exp_dir ../results/mohawk_hairstyle --no_fine_mapper --description "mohawk hairstyle"
 ```
