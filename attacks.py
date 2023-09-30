@@ -2,7 +2,7 @@ import time
 import numpy as np 
 import torch.nn as nn 
 from datetime import datetime
-
+from transformers import ViTForImageClassification
 from PIL import Image
 from torchvision import transforms
 import torch.optim as optim
@@ -17,10 +17,11 @@ warnings.filterwarnings('ignore')
 
 from art.attacks.evasion import ProjectedGradientDescent
 from art.attacks.evasion import FastGradientMethod
+from art.attacks.evasion import SaliencyMapMethod
 import requests 
 '''
 Attack class.
-
+ 
 Authors: Carter Gilbert, Daniel Hassler
 Version: 09/29/2023
 
@@ -42,12 +43,14 @@ class Attack():
         self.imdim = imdim
 
         if default_classifier:
-            self.model_resnet18 = models.resnet18(pretrained=True)  
+            # self.model = ViTForImageClassification.from_pretrained("RickyIG/emotion_face_image_classification_v3")
+            # self.model= models.vit_b_16(pretrained=True) 
+            self.model= models.resnet18(pretrained=True)  
             
             self.criterion = nn.CrossEntropyLoss()
-
+            
             self.classifier = PyTorchClassifier(
-                model=self.model_resnet18,
+                model=self.model,
                 loss=self.criterion,
                 input_shape=(3, self.imdim, self.imdim),
                 nb_classes=1000,
@@ -117,15 +120,9 @@ class Attack():
         file_path: path to image file.
         '''
         input_batch = self.initial(file_path)
-
         fgsm_attack = FastGradientMethod(estimator = self.classifier, eps=0.05) 
         
-        x_test_adv = fgsm_attack.generate(x=input_batch)
-        predictions = self.classifier.predict(x_test_adv)
-        # print(np.argmax(predictions, axis=1))
-        accuracy = round(np.max(self.softmax_activation(predictions), axis=1)[0]*100,2)
-        # print("Accuracy on adversarial test examples: {}%".format(accuracy))
-        
+        x_test_adv = fgsm_attack.generate(x=input_batch)        
         input_fgsm = x_test_adv[0].transpose((1,2,0))
         
         self.save_image("FGSM", input_fgsm)
@@ -137,7 +134,13 @@ class Attack():
         file_path: path to image file.
         '''
         input_batch = self.initial(file_path)
-        pass
+        pgd_attack = ProjectedGradientDescent(self.classifier, max_iter=20, eps_step=1, eps=0.05) 
+
+        x_test_adv = pgd_attack.generate(x=input_batch)
+        input = x_test_adv[0].transpose((1,2,0))
+        
+        self.save_image("PGD", input)
+        
 
     def SPSA(self, file_path):
         '''
@@ -145,15 +148,25 @@ class Attack():
 
         file_path: path to image file.
         '''
+        input_batch = self.initial(file_path)
+        spsa_attack = torchattacks.attacks.spsa.SPSA()
         pass
 
     def JSMA(self, file_path):
         '''
         Runs a JSMA (Jacobian Saliency Map Attack) attack on image.
         '''
-        pass
+        input_batch = self.initial(file_path)
+        jsma_attack = SaliencyMapMethod(self.classifier, theta=1, gamma=0.1)
 
+        x_test_adv = jsma_attack.generate(x=input_batch)
+        input = x_test_adv[0].transpose((1,2,0))
+
+        self.save_image("JSMA", input)
 
 if __name__ == "__main__":
-    attack = Attack()
+    print("Starting The Attack....")
+    attack = Attack(imdim=512)
     attack.FGSM("./FFHQ512/00000.png")
+    attack.PGD("./FFHQ512/00000.png")
+    attack.JSMA("./FFHQ512/00000.png")

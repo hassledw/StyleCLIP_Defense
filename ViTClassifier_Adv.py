@@ -1,4 +1,4 @@
-from attacks import FGSM
+from attacks import Attack
 from transformers import AutoImageProcessor, ViTForImageClassification
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -43,7 +43,7 @@ def get_confidence(logits):
 df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
 n_images = 40000
 
-attack = Attack()
+attack = Attack(imdim=512)
 
 for num in range(n_images):
     image_name = f'{num:05d}.png'
