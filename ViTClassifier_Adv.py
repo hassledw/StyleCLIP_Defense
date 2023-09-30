@@ -43,13 +43,15 @@ def get_confidence(logits):
 df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
 n_images = 40000
 
+attack = Attack()
+
 for num in range(n_images):
     image_name = f'{num:05d}.png'
     image_path = f'./FFHQ512/{image_name}'
     print(image_name)
     if not os.path.isfile(image_path):
         continue
-    FGSM(image_path)
+    attack.FGSM(image_path)
     expression, logits = get_image_label("./FGSM.jpg")
     confidence = get_confidence(logits)
 
