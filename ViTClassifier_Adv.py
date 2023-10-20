@@ -62,7 +62,7 @@ def run_attack():
     model.to("cpu")
 
     orig_df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
-    orig_df = orig_df[:10] # first 10
+    # orig_df = orig_df[:10] # first 10
     label_encoder = LabelEncoder()
     encoded_labels = label_encoder.fit_transform(orig_df["expression"])
     orig_df["expression"] = encoded_labels
