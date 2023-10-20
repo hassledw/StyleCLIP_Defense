@@ -72,6 +72,7 @@ def generate_attack(attack, df, labels):
     labels: an encoding of the labels (integer values)
     '''
     images = []
+    file_names = []
 
     for file_name in df["image"]: 
         img = Image.open(f"/home/grads/hassledw/StyleCLIP_Defense/FFHQ512/{file_name}")
@@ -82,17 +83,19 @@ def generate_attack(attack, df, labels):
 
         input_tensor = transform(img)
         images.append(normalize_between_range(input_tensor))
-
+        file_names.append(file_name)
     # everything but JSMA and SPSA works so far.
     images = torch.stack(images)
     adv_tensors = attack.forward(images, labels)
     adv_images = tensor_to_image(adv_tensors)
-    return adv_images
+    
+    return adv_images, file_names
 
 def main():
     model = models.resnet18(pretrained=True)
     model.to("cpu")
-
+    file_names = []
+    
     df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
     df = df[:10] # first 10
     label_encoder = LabelEncoder()
@@ -100,7 +103,7 @@ def main():
     df["expression"] = encoded_labels
 
     labels = torch.tensor(df["expression"].values)
-    adv_images = generate_attack(FGSM(model), df, labels)
+    adv_images, file_names = generate_attack(FGSM(model), df, labels)
     print(adv_images)
 
     adv_images[0].save("Test1.jpg")

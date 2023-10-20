@@ -1,4 +1,20 @@
+import torch.nn as nn
+import torch.optim as optim
+import torch
+import torchvision.models as models
+from torchattacks.attack import Attack
+import torchvision.transforms as transforms
+from torchattacks import JSMA, PGD, FGSM, SPSA, RFGSM, Jitter, OnePixel, FAB, AutoAttack
+from transformers import AutoImageProcessor, ViTForImageClassification
+from PIL import Image
+import pandas as pd
+from sklearn.preprocessing import LabelEncoder
+
+import art.attacks.evasion as evasion
+from art.estimators.classification import PyTorchClassifier
+
 from attacks import Attack
+import attackstorch
 from transformers import AutoImageProcessor, ViTForImageClassification
 from PIL import Image
 import matplotlib.pyplot as plt
@@ -40,24 +56,32 @@ def get_confidence(logits):
     return torch.max(normalized_tensor / sum_values).item()
 
 
-df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
-n_images = 40000
+def run_attack():
+    print("Running Attack...")
+    model = models.resnet18(pretrained=True)
+    model.to("cpu")
 
-attack = Attack(imdim=512)
+    orig_df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
+    orig_df = orig_df[:10] # first 10
+    label_encoder = LabelEncoder()
+    encoded_labels = label_encoder.fit_transform(orig_df["expression"])
+    orig_df["expression"] = encoded_labels
 
-for num in range(n_images):
-    image_name = f'{num:05d}.png'
-    image_path = f'./FFHQ512/{image_name}'
-    print(image_name)
-    if not os.path.isfile(image_path):
-        continue
-    attack.FGSM(image_path)
-    expression, logits = get_image_label("./FGSM.jpg")
-    confidence = get_confidence(logits)
-
-    entry = [image_name, expression, confidence]
-    df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
-    df = pd.concat((df, df_entry))
-
-# print(df)
-df.to_csv('./FFHQ-512-FGSM.csv')  
+    labels = torch.tensor(orig_df["expression"].values)
+    adv_images, file_names = attackstorch.generate_attack(FGSM(model, eps=0.05), orig_df, labels)
+    # print(adv_images)
+    
+    
+    attack_df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
+    for i, image in enumerate(adv_images):
+        print(i)
+        image.save("./FGSM.png")
+        expression, logits = get_image_label("./FGSM.png")
+        confidence = get_confidence(logits)
+        entry = [file_names[i], expression, confidence]
+        attack_df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
+        attack_df = pd.concat((attack_df, attack_df_entry))
+        
+    attack_df.to_csv('./FFHQ512-Labeled/FFHQ-512-FGSM-05.csv') 
+    
+run_attack()
