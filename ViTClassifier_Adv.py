@@ -31,6 +31,10 @@ model.to(device)
 # creating a image object (main image)
 
 def get_image_label(filename, show_image=False):
+    '''
+    Given the filename of the image, return the classified label
+    and its logits (logits are used to determine confidence).
+    '''
     image = Image.open(rf"{filename}") 
     inputs = processor(image, return_tensors="pt")
 
@@ -48,6 +52,9 @@ def get_image_label(filename, show_image=False):
     return model.config.id2label[predicted_label], logits
 
 def get_confidence(logits):
+    '''
+    Return the confidence value for the associated classification. 
+    '''
     min_value = torch.min(logits)
     max_value = torch.max(logits)
     normalized_tensor = (logits - min_value) / (max_value - min_value)
@@ -56,32 +63,40 @@ def get_confidence(logits):
     return torch.max(normalized_tensor / sum_values).item()
 
 
-def run_attack():
+def run_attack(attack, filename):
     print("Running Attack...")
-    model = models.resnet18(pretrained=True)
-    model.to("cpu")
 
     orig_df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
-    # orig_df = orig_df[:10] # first 10
     label_encoder = LabelEncoder()
-    encoded_labels = label_encoder.fit_transform(orig_df["expression"])
-    orig_df["expression"] = encoded_labels
-
-    labels = torch.tensor(orig_df["expression"].values)
-    adv_images, file_names = attackstorch.generate_attack(FGSM(model, eps=0.05), orig_df, labels)
-    # print(adv_images)
-    
     
     attack_df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
-    for i, image in enumerate(adv_images):
-        print(i)
-        image.save("./FGSM.png")
-        expression, logits = get_image_label("./FGSM.png")
-        confidence = get_confidence(logits)
-        entry = [file_names[i], expression, confidence]
-        attack_df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
-        attack_df = pd.concat((attack_df, attack_df_entry))
-        
-    attack_df.to_csv('./FFHQ512-Labeled/FFHQ-512-FGSM-05.csv') 
+    step = 100
+    n_images = 500
     
-run_attack()
+    for x in range(0, n_images, step):
+        batch_df = orig_df[x:x+step]
+        print(f"Batch: {x + 1} of {n_images//step}")
+        encoded_labels = label_encoder.fit_transform(batch_df["expression"])
+        batch_df["expression"] = encoded_labels
+
+        labels = torch.tensor(batch_df["expression"].values)
+        adv_images, file_names = attackstorch.generate_attack(attack, batch_df, labels)
+
+        for i, image in enumerate(adv_images):
+            image.save("./FGSM.png")
+            expression, logits = get_image_label("./FGSM.png")
+            confidence = get_confidence(logits)
+            entry = [file_names[i], expression, confidence]
+            attack_df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
+            attack_df = pd.concat((attack_df, attack_df_entry))
+
+    attack_df.to_csv(f'./FFHQ512-Labeled/{filename}')
+
+def main():
+    model = models.resnet18(pretrained=True)
+    model.to("cpu")
+    FGSM_Attack = FGSM(model, eps=0.05)
+    run_attack(FGSM_Attack, 'FFHQ-512-FGSM-05.csv')
+
+if __name__ == "__main__":
+    main()

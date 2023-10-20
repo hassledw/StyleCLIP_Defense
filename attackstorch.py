@@ -74,7 +74,7 @@ def generate_attack(attack, df, labels):
     images = []
     file_names = []
 
-    for file_name in df["image"]: 
+    for file_name in df["image"]:
         img = Image.open(f"/home/grads/hassledw/StyleCLIP_Defense/FFHQ512/{file_name}")
         transform = transforms.Compose([
             PILToFloatTensor(),
@@ -91,22 +91,39 @@ def generate_attack(attack, df, labels):
     
     return adv_images, file_names
 
+def run_sample_attack(attack, file_name, labels):
+    img = Image.open(f"/home/grads/hassledw/StyleCLIP_Defense/FFHQ512/{file_name}")
+    transform = transforms.Compose([
+        PILToFloatTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+
+    input_tensor = transform(img)
+    images.append(normalize_between_range(input_tensor))
+
+    images = torch.stack(images)
+    adv_tensors = attack.forward(images, labels)
+    adv_image = tensor_to_image(adv_tensors)
+
+    return adv_image
+
 def main():
-    model = models.resnet18(pretrained=True)
-    model.to("cpu")
-    file_names = []
-    
-    df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
-    df = df[:10] # first 10
-    label_encoder = LabelEncoder()
-    encoded_labels = label_encoder.fit_transform(df["expression"])
-    df["expression"] = encoded_labels
+    pass
+    # model = models.resnet18(pretrained=True)
+    # model.to("cpu")
+    # file_names = []
 
-    labels = torch.tensor(df["expression"].values)
-    adv_images, file_names = generate_attack(FGSM(model), df, labels)
-    print(adv_images)
+    # df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
+    # df = df[:10] # first 10
+    # label_encoder = LabelEncoder()
+    # encoded_labels = label_encoder.fit_transform(df["expression"])
+    # df["expression"] = encoded_labels
 
-    adv_images[0].save("Test1.jpg")
+    # labels = torch.tensor(df["expression"].values)
+    # # adv_images, file_names = generate_attack(FGSM(model), df, labels)
+    # # print(adv_images)
 
-if __name__ == "__main__":
-    main()
+    # # adv_images[0].save("Test1.jpg")
+
+    # adv_image = generate_attack(FGSM(model), df["image"][0], labels)
+    # adv_image.save("test1.jpg")
