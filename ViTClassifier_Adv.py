@@ -21,7 +21,9 @@ import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import torch
 import pandas as pd
+import numpy as np
 import os
+import time
 
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 processor = AutoImageProcessor.from_pretrained("RickyIG/emotion_face_image_classification_v3")
@@ -76,12 +78,19 @@ def run_attack(attack, filename):
     
     attack_df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
     step = 100
-    n_images = 40000
+    n_images = 38000
 
+    total_time = time.time()
+    end_time = 0
+    start_time = 0
+    times = []
     # runs the attacks in batches for memory purposes.
     for x in range(0, n_images, step):
+        if x != 0:
+            times.append(end_time - start_time)
+        print(f"Progress: {(x / n_images) * 100:.2f}% Done, Time Elapsed: {(end_time - total_time) / 60:.3f}m, Estimated Total: {(np.mean(np.array(times)) * (n_images / step)) / 60:.3f}m")
+        start_time = time.time()
         batch_df = orig_df[x:x+step]
-        print(f"Progress: {(x / n_images) * 100}%")
         encoded_labels = label_encoder.fit_transform(batch_df["expression"])
         batch_df["expression"] = encoded_labels
 
@@ -95,7 +104,9 @@ def run_attack(attack, filename):
             entry = [file_names[i], expression, confidence]
             attack_df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
             attack_df = pd.concat((attack_df, attack_df_entry))
-
+            
+        end_time = time.time()
+    
     attack_df.to_csv(f'./FFHQ512-Labeled/{filename}')
 
 def main():
