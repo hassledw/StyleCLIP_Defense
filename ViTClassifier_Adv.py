@@ -23,7 +23,7 @@ import torch
 import pandas as pd
 import os
 
-device = 'cpu'
+device = 'cuda' if torch.cuda.is_available() else 'cpu'
 processor = AutoImageProcessor.from_pretrained("RickyIG/emotion_face_image_classification_v3")
 model = ViTForImageClassification.from_pretrained("RickyIG/emotion_face_image_classification_v3")
 model.to(device)
@@ -37,6 +37,7 @@ def get_image_label(filename, show_image=False):
     '''
     image = Image.open(rf"{filename}") 
     inputs = processor(image, return_tensors="pt")
+    inputs.to(device)
 
     with torch.no_grad():
         logits = model(**inputs).logits
@@ -64,6 +65,10 @@ def get_confidence(logits):
 
 
 def run_attack(attack, filename):
+    '''
+    Given an attack, run the attack on all images in the FFHQ-512-labeled.csv file. This
+    will save the attack results into the filename (csv).
+    '''
     print("Running Attack...")
 
     orig_df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
@@ -71,11 +76,12 @@ def run_attack(attack, filename):
     
     attack_df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
     step = 100
-    n_images = 500
-    
+    n_images = 40000
+
+    # runs the attacks in batches for memory purposes.
     for x in range(0, n_images, step):
         batch_df = orig_df[x:x+step]
-        print(f"Batch: {x + 1} of {n_images//step}")
+        print(f"Progress: {(x / n_images) * 100}%")
         encoded_labels = label_encoder.fit_transform(batch_df["expression"])
         batch_df["expression"] = encoded_labels
 
@@ -94,9 +100,9 @@ def run_attack(attack, filename):
 
 def main():
     model = models.resnet18(pretrained=True)
-    model.to("cpu")
-    FGSM_Attack = FGSM(model, eps=0.05)
-    run_attack(FGSM_Attack, 'FFHQ-512-FGSM-05.csv')
+    model.to(device)
+    FGSM_Attack = FGSM(model, eps=0.10)
+    run_attack(FGSM_Attack, 'FFHQ-512-FGSM-10.csv')
 
 if __name__ == "__main__":
     main()
