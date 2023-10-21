@@ -72,6 +72,7 @@ def run_attack(attack, filename):
     will save the attack results into the filename (csv).
     '''
     print("Running Attack...")
+    print(f"{filename}")
 
     orig_df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
     label_encoder = LabelEncoder()
@@ -112,8 +113,16 @@ def run_attack(attack, filename):
 def main():
     model = models.resnet18(pretrained=True)
     model.to(device)
-    FGSM_Attack = FGSM(model, eps=0.10)
-    run_attack(FGSM_Attack, 'FFHQ-512-FGSM-10.csv')
+    PGD_attack1 = PGD(model, eps=0.1, alpha=0.1)
+    PGD_attack2 = PGD(model, eps=0.1, alpha=0.2)
+    PGD_attack3 = PGD(model, eps=0.2, alpha=0.1)
+    PGD_attack4 = PGD(model, eps=0.5, alpha=0.5)
+    FGSM_attack = FGSM(model, eps=0.5)
+    run_attack(PGD_attack1, 'FFHQ-512-PGD-10-10.csv')
+    run_attack(PGD_attack2, 'FFHQ-512-PGD-10-20.csv')
+    run_attack(PGD_attack3, 'FFHQ-512-PGD-20-10.csv')
+    run_attack(PGD_attack4, 'FFHQ-512-PGD-50-50.csv')
+    run_attack(FGSM_attack, 'FFHQ-512-FGSM-50.csv')
 
 if __name__ == "__main__":
     main()
