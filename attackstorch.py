@@ -103,8 +103,8 @@ def main():
     df["expression"] = encoded_labels
 
     labels = torch.tensor(df["expression"].values)
-    adv_images, file_names = generate_attack(FGSM(model, eps=0.5), df, labels)
+    adv_images, file_names = generate_attack(Jitter(model, eps=0.1, alpha=0.1), df, labels)
     print(adv_images)
-    adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/test1.jpg")
+    adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/test1.png")
 
 main()

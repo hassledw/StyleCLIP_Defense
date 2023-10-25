@@ -9,7 +9,6 @@ from transformers import AutoImageProcessor, ViTForImageClassification
 from PIL import Image
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-
 import art.attacks.evasion as evasion
 from art.estimators.classification import PyTorchClassifier
 
@@ -25,6 +24,7 @@ import numpy as np
 import os
 import time
 
+path = "/home/grads/hassledw"
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 processor = AutoImageProcessor.from_pretrained("RickyIG/emotion_face_image_classification_v3")
 model = ViTForImageClassification.from_pretrained("RickyIG/emotion_face_image_classification_v3")
@@ -74,12 +74,15 @@ def run_attack(attack, filename):
     print("Running Attack...")
     print(f"{filename}")
 
-    orig_df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
+    orig_df = pd.read_csv(f"{path}/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
     label_encoder = LabelEncoder()
     
     attack_df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
-    step = 100
+    step = 50
     n_images = 38000
+    
+    # step = 1
+    # n_images = 50
 
     total_time = time.time()
     end_time = 0
@@ -99,8 +102,11 @@ def run_attack(attack, filename):
         adv_images, file_names = attackstorch.generate_attack(attack, batch_df, labels)
 
         for i, image in enumerate(adv_images):
-            image.save("./FGSM.png")
-            expression, logits = get_image_label("./FGSM.png")
+            image.save(f"{path}/StyleCLIP_Defense/FGSM.png")
+            
+            # os.system(f"python3 {path}/StyleCLIP/defense.py")
+            
+            expression, logits = get_image_label(f"{path}/StyleCLIP_Defense/FGSM.png")
             confidence = get_confidence(logits)
             entry = [file_names[i], expression, confidence]
             attack_df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
@@ -108,21 +114,22 @@ def run_attack(attack, filename):
             
         end_time = time.time()
     
-    attack_df.to_csv(f'./FFHQ512-Labeled/{filename}')
+    attack_df.to_csv(f'{path}/StyleCLIP_Defense/FFHQ512-Labeled/{filename}')
 
 def main():
     model = models.resnet18(pretrained=True)
     model.to(device)
     PGD_attack1 = PGD(model, eps=0.1, alpha=0.1)
-    PGD_attack2 = PGD(model, eps=0.1, alpha=0.2)
-    PGD_attack3 = PGD(model, eps=0.2, alpha=0.1)
-    PGD_attack4 = PGD(model, eps=0.5, alpha=0.5)
-    FGSM_attack = FGSM(model, eps=0.5)
-    run_attack(PGD_attack1, 'FFHQ-512-PGD-10-10.csv')
-    run_attack(PGD_attack2, 'FFHQ-512-PGD-10-20.csv')
-    run_attack(PGD_attack3, 'FFHQ-512-PGD-20-10.csv')
-    run_attack(PGD_attack4, 'FFHQ-512-PGD-50-50.csv')
-    run_attack(FGSM_attack, 'FFHQ-512-FGSM-50.csv')
+    # PGD_attack2 = PGD(model, eps=0.1, alpha=0.2)
+    # PGD_attack3 = PGD(model, eps=0.2, alpha=0.1)
+    # PGD_attack4 = PGD(model, eps=0.5, alpha=0.5)
+    # Jitter_attack = Jitter(model, eps=0.1, alpha=0.1)
+    run_attack(PGD_attack1, 'FFHQ-512-PGD-10-10-verify.csv')
+    # run_attack(PGD_attack2, 'FFHQ-512-PGD-10-20.csv')
+    # run_attack(PGD_attack3, 'FFHQ-512-PGD-20-10.csv')
+    # run_attack(PGD_attack4, 'FFHQ-512-PGD-50-50.csv')
+    # run_attack(FGSM_attack, 'FFHQ-512-FGSM-50.csv')
+    # run_attack(Jitter_attack, 'FFHQ-512-Jitter-10-10.csv')
 
 if __name__ == "__main__":
     main()
