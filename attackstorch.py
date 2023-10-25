@@ -91,6 +91,34 @@ def generate_attack(attack, df, labels):
     
     return adv_images, file_names
 
+def generate_attack_image(attack, file_path, labels):
+    '''
+    Uses torch.attacks attack method to create one adversarial image given the
+    specified attack, dataframe, and labels.
+
+    attack: framework (FGSM, PGD, AutoAttack ...)
+    df: image data in which to attack in the type of pd.dataframe with "image" column
+    labels: an encoding of the labels (integer values)
+    '''
+    images = []
+    file_names = []
+
+    img = Image.open(f"{file_path}")
+    transform = transforms.Compose([
+        PILToFloatTensor(),
+        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+    ])
+
+    input_tensor = transform(img)
+    images.append(normalize_between_range(input_tensor))
+    file_names.append(file_path)
+    # everything but JSMA and SPSA works so far.
+    images = torch.stack(images)
+    adv_tensors = attack.forward(images, labels)
+    adv_images = tensor_to_image(adv_tensors)
+    
+    return adv_images, file_names
+
 def main():
     model = models.resnet18(pretrained=True)
     model.to("cpu")
@@ -105,6 +133,12 @@ def main():
     labels = torch.tensor(df["expression"].values)
     adv_images, file_names = generate_attack(Jitter(model, eps=0.1, alpha=0.1), df, labels)
     print(adv_images)
-    adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/test1.png")
+    adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/test1.png")
+
+    # Single image
+    # file_path = "/home/grads/hassledw/StyleCLIP_Defense/images/daniel.jpg"
+    # adv_images, file_names = generate_attack_image(Jitter(model, eps=0.1, alpha=0.1), file_path, labels)
+    # print(adv_images)
+    # adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/test1.png")
 
 main()
