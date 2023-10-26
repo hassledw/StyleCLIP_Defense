@@ -136,9 +136,9 @@ def main():
     adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/test1.png")
 
     # Single image
-    # file_path = "/home/grads/hassledw/StyleCLIP_Defense/images/daniel.jpg"
+    # file_path = "/home/grads/hassledw/StyleCLIP_Defense/images/oliver/oliver.png"
     # adv_images, file_names = generate_attack_image(Jitter(model, eps=0.1, alpha=0.1), file_path, labels)
     # print(adv_images)
-    # adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/test1.png")
+    # adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/FGSM.png")
 
 main()
