@@ -12,7 +12,7 @@ from sklearn.preprocessing import LabelEncoder
 import art.attacks.evasion as evasion
 from art.estimators.classification import PyTorchClassifier
 
-from attacks import Attack
+# from StyleCLIP_Defense.resources.attacks import Attack
 import attackstorch
 from transformers import AutoImageProcessor, ViTForImageClassification
 from PIL import Image

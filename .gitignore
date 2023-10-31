@@ -1,2 +1,4 @@
 FFHQ512/
 images/friends
+CelebA*
+facial_identity_classification_transfer_learning_with_ResNet18.pth
