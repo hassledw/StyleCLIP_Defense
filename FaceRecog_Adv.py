@@ -104,15 +104,6 @@ def classify(subdir, model):
     data_dir = f'{path}/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset'
     # num_files=len(os.listdir(f'{data_dir}/{subdir}'))
     return cc.celebClassifier(data_dir, subdir, 200, model)
-    
-
-def create_csv(savefile):
-    '''
-    Creates the csv (original, attacked, or defended data) storing
-    into a csv with columns: ["orig_image", "label", "confidence"] into 
-    ./CelebHQ-Labeled.
-    '''
-    
 
 
 def main():

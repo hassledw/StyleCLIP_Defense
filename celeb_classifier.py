@@ -2,9 +2,10 @@ import torch
 from torchvision import datasets, transforms
 import numpy as np
 import os
+import pandas as pd
 path = "/home/grads/hassledw"
 
-def celebClassifier(data_dir, subdir, num_files, model):
+def celebClassifier(data_dir, subdir, num_files, model, save=True):
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # device object
     transforms_test = transforms.Compose([
         transforms.Resize((256, 256)),
@@ -23,8 +24,6 @@ def celebClassifier(data_dir, subdir, num_files, model):
 
         for i, (inputs, labels) in enumerate(test_dataloader):
             # print(f"{i}:\n INPUTS: {inputs}\n LABELS: {labels}\n")
-            # print(inputs)
-            # print(labels)
             inputs = inputs.to(device)
             labels = labels.to(device)
             outputs = model(inputs)
@@ -44,6 +43,15 @@ def celebClassifier(data_dir, subdir, num_files, model):
 
         # print("Labels: ", labels_arr)
         # print("Pred: ", predictions)
+    if save:
+        df = pd.DataFrame(columns=['image', 'image_path', 'actual_label', 'predicted_label', 'confidence'])
+        for x, (imagepath, label) in enumerate(test_dataset.imgs):
+            entry = [imagepath.split("/")[-1], imagepath, label, predictions[x], confidences[x]]
+            df_entry = pd.DataFrame(entry, index=["image", "image_path", "actual_label", "predicted_label", "confidence"]).T
+            df = pd.concat((df, df_entry))
+        df.to_csv(f"/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ-Labeled/{subdir}.csv")
+        print(f"Results saved to {subdir}.csv!")
+        
         
     
     return torch.tensor(labels_arr, dtype=torch.long), predictions, confidences
