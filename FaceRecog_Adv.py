@@ -51,7 +51,7 @@ def attack_celeb(attack, labels_arr, attackfolder):
     ''' 
     attackstorch.generate_attack(attack, labels_arr, attackfolder)
 
-def defend_celeb(attackname):
+def defend_celeb(attackname, defense):
     '''
     Generate defended images from the /CelebA_HQ.../attack folder.
     Stores defended images into /CelebA_HQ.../defend
@@ -59,7 +59,6 @@ def defend_celeb(attackname):
     curr_dir = "/home/grads/hassledw"
     rootdir = f'{curr_dir}/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/{attackname}'
     savedir = f'{curr_dir}/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/StyleCLIP-{attackname}'
-    defense = Defense()
     
     if os.path.exists(savedir):
         print("\nDefense has already been run...")
@@ -109,20 +108,17 @@ def classify(subdir, model):
 def main():
     model = load_model()
     model.to(device)
+    defense = Defense()
 
-    attackname = "FGSM05"
-    # labels_arr, predictions, confidences = classify("test", model)
+    labels_test, predictions, confidences = classify("test", model)
+    attacknames = ["FGSM25", "PGD2010", "PGD5050", "Jitter1010"]
+    attacks = [FGSM(model, eps=0.25), PGD(model, eps=0.2, alpha=0.1), PGD(model, eps=0.5, alpha=0.5), Jitter(model, eps=0.10, alpha=0.10)]
 
-    # attack_celeb(FGSM(model, eps=0.05), labels_arr, attackname)
-    # labels_arr, predictions, confidences = classify(attackname, model)
-    # print(labels_arr)
-    # print(predictions)
-
-    detected_images = defend_celeb(attackname)
-    labels_arr, predictions, confidences = classify(f"StyleCLIP-{attackname}", model)
-    print(labels_arr)
-    print(predictions)
-    print(detected_images)
+    for attackname, attack in zip(attacknames, attacks):
+        attack_celeb(attack, labels_test, attackname)
+        labels_arr, predictions, confidences = classify(attackname, model)
+        detected_images = defend_celeb(attackname, defense)
+        labels_arr, predictions, confidences = classify(f"StyleCLIP-{attackname}", model)
 
 if __name__ == "__main__":
     main()
