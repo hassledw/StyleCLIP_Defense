@@ -1,3 +1,7 @@
+import sys
+sys.path.insert(1, '/home/grads/hassledw/StyleCLIP')
+from defense import Defense
+
 import torch.nn as nn
 import torch.optim as optim
 import torch
@@ -78,16 +82,17 @@ def run_attack(attack, filename):
     label_encoder = LabelEncoder()
     
     attack_df = pd.DataFrame(columns=['image', 'expression', 'confidence'])
-    # step = 50
-    # n_images = 38000
+    step = 50
+    n_images = 38000
     
-    step = 5
-    n_images = 100
+    # step = 5
+    # n_images = 100
 
     total_time = time.time()
     end_time = 0
     start_time = 0
     times = []
+    defense = Defense()
     # runs the attacks in batches for memory purposes.
     for x in range(0, n_images, step):
         if x != 0:
@@ -102,12 +107,21 @@ def run_attack(attack, filename):
         adv_images, file_names = attackstorch.generate_attack(attack, batch_df, labels)
 
         for i, image in enumerate(adv_images):
-            image.save(f"{path}/StyleCLIP_Defense/images/FGSM.png")
-            
-            os.system("python3 /home/grads/hassledw/StyleCLIP/defense.py")
-            
-            expression, logits = get_image_label(f"{path}/StyleCLIP_Defense/images/generated.png")
-            confidence = get_confidence(logits)
+            image_path = f"{path}/StyleCLIP_Defense/images/FGSM.png"
+            image.save(image_path)
+            neutral = 'a face with skin'
+            target = 'a face with clear skin' 
+            beta = 0.1 
+            alpha = 4.0
+            try:
+                defense.styleCLIP_def(neutral, target, alpha, beta, image_path)
+                expression, logits = get_image_label(f"{path}/StyleCLIP_Defense/images/generated.png")
+                confidence = get_confidence(logits)
+            except:
+                print("Adversarial Image Detected!")
+                expression, logits = "ERR", None
+                confidence = 1.0
+
             entry = [file_names[i], expression, confidence]
             attack_df_entry = pd.DataFrame(entry, index=["image", "expression", "confidence"]).T
             attack_df = pd.concat((attack_df, attack_df_entry))
@@ -119,18 +133,22 @@ def run_attack(attack, filename):
 def main():
     model = models.resnet18(pretrained=True)
     model.to(device)
+    PGD_attack0 = PGD(model, eps=0.05, alpha=0.05)
     # PGD_attack1 = PGD(model, eps=0.1, alpha=0.1)
     # PGD_attack2 = PGD(model, eps=0.1, alpha=0.2)
     # PGD_attack3 = PGD(model, eps=0.2, alpha=0.1)
     # PGD_attack4 = PGD(model, eps=0.5, alpha=0.5)
-    Jitter_attack = Jitter(model, eps=0.1, alpha=0.1)
-    # run_attack(PGD_attack1, 'FFHQ-512-PGD-10-10-verify.csv')
-    # run_attack(PGD_attack2, 'FFHQ-512-PGD-10-20.csv')
-    # run_attack(PGD_attack3, 'FFHQ-512-PGD-20-10.csv')
-    # run_attack(PGD_attack4, 'FFHQ-512-PGD-50-50.csv')
+    # Jitter_attack = Jitter(model, eps=0.1, alpha=0.1)
+    # fgsm_attack = FGSM(model, eps=0.05)
+    run_attack(PGD_attack0, 'FFHQ-512-PGD-05-05-def.csv')
+    # run_attack(PGD_attack1, 'FFHQ-512-PGD-10-10-def.csv')
+    # run_attack(PGD_attack2, 'FFHQ-512-PGD-10-20-def.csv')
+    # run_attack(PGD_attack3, 'FFHQ-512-PGD-20-10-def.csv')
+    # run_attack(PGD_attack4, 'FFHQ-512-PGD-50-50-def.csv')
     # run_attack(FGSM_attack, 'FFHQ-512-FGSM-50.csv')
     # run_attack(Jitter_attack, 'FFHQ-512-Jitter-10-10.csv')
-    run_attack(Jitter_attack, 'FFHQ-512-Jitter-10-10-def.csv')
+    # run_attack(Jitter_attack, 'FFHQ-512-Jitter-10-10-def.csv')
+    # run_attack(fgsm_attack, "FFHQ-512-FGSM-05-def.csv")
 
 if __name__ == "__main__":
     main()

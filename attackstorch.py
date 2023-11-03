@@ -12,7 +12,7 @@ from transformers import AutoImageProcessor, ViTForImageClassification
 from PIL import Image
 import pandas as pd
 from sklearn.preprocessing import LabelEncoder
-
+import os
 import art.attacks.evasion as evasion
 from art.estimators.classification import PyTorchClassifier
 
@@ -62,7 +62,7 @@ def tensor_to_image(tensor_imgs):
 
     return images
 
-def generate_attack(attack, df, labels):
+def generate_attack(attack, labels, foldername):
     '''
     Uses torch.attacks attack method to create adversarial image given the
     specified attack, dataframe, and labels.
@@ -71,74 +71,46 @@ def generate_attack(attack, df, labels):
     df: image data in which to attack in the type of pd.dataframe with "image" column
     labels: an encoding of the labels (integer values)
     '''
-    images = []
-    file_names = []
+    rootdir = '/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/test'
+    savedir = f'/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/{foldername}'
 
-    for file_name in df["image"]:
-        img = Image.open(f"/home/grads/hassledw/StyleCLIP_Defense/FFHQ512/{file_name}")
-        transform = transforms.Compose([
-            PILToFloatTensor(),
-            transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-        ])
-
-        input_tensor = transform(img)
-        images.append(normalize_between_range(input_tensor))
-        file_names.append(file_name)
-    # everything but JSMA and SPSA works so far.
-    images = torch.stack(images)
-    adv_tensors = attack.forward(images, labels)
-    adv_images = tensor_to_image(adv_tensors)
+    if os.path.exists(savedir):
+        print(f"Attack {foldername} has already been run")
+        return 0
     
-    return adv_images, file_names
+    print("Attacking the test dataset...")
+    os.mkdir(savedir)
+    count = 0
+    origcount = 0
+    for subdir, _, files in os.walk(rootdir):
+        if len(files) == 0:
+            continue
+        subdir_arr = subdir.split("/")[-1]
+        os.mkdir(f"{savedir}/{subdir_arr}")
+        images = []
+        img_names = []
 
-def generate_attack_image(attack, file_path, labels):
-    '''
-    Uses torch.attacks attack method to create one adversarial image given the
-    specified attack, dataframe, and labels.
+        for i, file in enumerate(files):
+            path = os.path.join(subdir, file)
+            img = Image.open(path)
+            transform = transforms.Compose([
+                PILToFloatTensor(),
+                transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
+            ])
 
-    attack: framework (FGSM, PGD, AutoAttack ...)
-    df: image data in which to attack in the type of pd.dataframe with "image" column
-    labels: an encoding of the labels (integer values)
-    '''
-    images = []
-    file_names = []
+            input_tensor = transform(img)
+            images.append(normalize_between_range(input_tensor))
+            img_names.append(file)
+            count += 1
 
-    img = Image.open(f"{file_path}")
-    transform = transforms.Compose([
-        PILToFloatTensor(),
-        transforms.Normalize(mean=[0.5, 0.5, 0.5], std=[0.5, 0.5, 0.5])
-    ])
+        batch_labels = labels[origcount:count]
+        
+        images = torch.stack(images)
+        adv_tensors = attack.forward(images, batch_labels)
+        adv_images = tensor_to_image(adv_tensors)
+        origcount = count
 
-    input_tensor = transform(img)
-    images.append(normalize_between_range(input_tensor))
-    file_names.append(file_path)
-    # everything but JSMA and SPSA works so far.
-    images = torch.stack(images)
-    adv_tensors = attack.forward(images, labels)
-    adv_images = tensor_to_image(adv_tensors)
-    
-    return adv_images, file_names
-
-def main():
-    model = models.resnet18(pretrained=True)
-    model.to("cpu")
-    file_names = []
-
-    df = pd.read_csv("/home/grads/hassledw/StyleCLIP_Defense/FFHQ512-Labeled/FFHQ-512-labeled.csv")
-    df = df[:1] # first 10
-    label_encoder = LabelEncoder()
-    encoded_labels = label_encoder.fit_transform(df["expression"])
-    df["expression"] = encoded_labels
-
-    labels = torch.tensor(df["expression"].values)
-    adv_images, file_names = generate_attack(Jitter(model, eps=0.1, alpha=0.1), df, labels)
-    print(adv_images)
-    adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/test1.png")
-
-    # Single image
-    # file_path = "/home/grads/hassledw/StyleCLIP_Defense/images/oliver/oliver.png"
-    # adv_images, file_names = generate_attack_image(Jitter(model, eps=0.1, alpha=0.1), file_path, labels)
-    # print(adv_images)
-    # adv_images[0].save("/home/grads/hassledw/StyleCLIP_Defense/images/FGSM.png")
-
-main()
+        for x, adv_image in enumerate(adv_images):
+            adv_image.save(f"{savedir}/{subdir_arr}/{img_names[x]}")
+        
+    print(f"Attack successful. Results stored in {foldername}!")
