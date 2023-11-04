@@ -54,7 +54,7 @@ def celebClassifier(data_dir, subdir, num_files, model, save=True):
         
         
     
-    return torch.tensor(labels_arr, dtype=torch.long), predictions, confidences
+    return torch.tensor(labels_arr, dtype=torch.long)
 
 
 

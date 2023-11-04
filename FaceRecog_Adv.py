@@ -56,6 +56,7 @@ def defend_celeb(attackname, defense):
     Generate defended images from the /CelebA_HQ.../attack folder.
     Stores defended images into /CelebA_HQ.../defend
     '''
+    df = pd.DataFrame(columns=['image', 'image_path'])
     curr_dir = "/home/grads/hassledw"
     rootdir = f'{curr_dir}/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/{attackname}'
     savedir = f'{curr_dir}/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/StyleCLIP-{attackname}'
@@ -65,7 +66,6 @@ def defend_celeb(attackname, defense):
         return 0
     
     os.mkdir(savedir)
-    detected_images = []
     count = 0
     for subdir, _, files in os.walk(rootdir):
         if len(files) == 0:
@@ -83,11 +83,14 @@ def defend_celeb(attackname, defense):
                 generated.save(f'{savedir}/{subdir_arr}/{file}')
                 print(f"Saving... {count}")
             except:
-                detected_images.append(path)
+                detected_image = Image.open(f"{path}")
+                detected_image.save(f'{savedir}/{subdir_arr}/{file}')
+                entry = [path.split("/")[-1], f'{savedir}/{subdir_arr}/{file}']
+                df_entry = pd.DataFrame(entry, index=["image", "image_path"]).T
+                df = pd.concat((df, df_entry))
                 print(f"Adversarially Attacked Image Detected: {file}, saving incident...")
             count += 1
-
-    return detected_images
+            df.to_csv(f"/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ-Labeled/StyleCLIP-{attackname}-detected.csv")
 
 def classify(subdir, model):
     '''
@@ -110,15 +113,17 @@ def main():
     model.to(device)
     defense = Defense()
 
-    labels_test, predictions, confidences = classify("test", model)
+    labels_test = classify("test", model)
     attacknames = ["FGSM25", "PGD2010", "PGD5050", "Jitter1010"]
     attacks = [FGSM(model, eps=0.25), PGD(model, eps=0.2, alpha=0.1), PGD(model, eps=0.5, alpha=0.5), Jitter(model, eps=0.10, alpha=0.10)]
+    # attacknames = ["FGSM50"]
+    # attacks = [FGSM(model, eps=0.50)]
 
     for attackname, attack in zip(attacknames, attacks):
         attack_celeb(attack, labels_test, attackname)
-        labels_arr, predictions, confidences = classify(attackname, model)
-        detected_images = defend_celeb(attackname, defense)
-        labels_arr, predictions, confidences = classify(f"StyleCLIP-{attackname}", model)
+        _ = classify(attackname, model)
+        defend_celeb(attackname, defense)
+        _ = classify(f"StyleCLIP-{attackname}", model)
 
 if __name__ == "__main__":
     main()
