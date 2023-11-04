@@ -114,11 +114,15 @@ def main():
     defense = Defense()
 
     labels_test = classify("test", model)
-    attacknames = ["FGSM25", "PGD2010", "PGD5050", "Jitter1010"]
-    attacks = [FGSM(model, eps=0.25), PGD(model, eps=0.2, alpha=0.1), PGD(model, eps=0.5, alpha=0.5), Jitter(model, eps=0.10, alpha=0.10)]
-    # attacknames = ["FGSM50"]
-    # attacks = [FGSM(model, eps=0.50)]
-
+    attacknames = ["FGSM05", "FGSM10", "FGSM25", "PGD1010", "PGD2010", "PGD5050", "Jitter1010"]
+    attacks = [FGSM(model, eps=0.05), 
+               FGSM(model, eps=0.1), 
+               FGSM(model, eps=0.25), 
+               PGD(model, eps=0.1, alpha=0.1), 
+               PGD(model, eps=0.2, alpha=0.1), 
+               PGD(model, eps=0.5, alpha=0.5), 
+               Jitter(model, eps=0.10, alpha=0.10)]
+    
     for attackname, attack in zip(attacknames, attacks):
         attack_celeb(attack, labels_test, attackname)
         _ = classify(attackname, model)
