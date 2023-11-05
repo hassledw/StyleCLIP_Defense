@@ -52,7 +52,7 @@ def celebClassifier(data_dir, subdir, num_files, model, save=True):
         df.to_csv(f"/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ-Labeled/{subdir}.csv")
         print(f"Results saved to {subdir}.csv!")
         
-        
+    torch.cuda.empty_cache()
     
     return torch.tensor(labels_arr, dtype=torch.long)
 

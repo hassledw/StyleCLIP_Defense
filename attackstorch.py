@@ -62,7 +62,7 @@ def tensor_to_image(tensor_imgs):
 
     return images
 
-def generate_attack(attack, labels, foldername):
+def generate_attack(attack, labels, foldername, rootsubdir="test"):
     '''
     Uses torch.attacks attack method to create adversarial image given the
     specified attack, dataframe, and labels.
@@ -71,14 +71,19 @@ def generate_attack(attack, labels, foldername):
     df: image data in which to attack in the type of pd.dataframe with "image" column
     labels: an encoding of the labels (integer values)
     '''
-    rootdir = '/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/test'
+    torch.cuda.empty_cache()
+    rootdir = f'/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/{rootsubdir}'
     savedir = f'/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset/{foldername}'
+
+    # sets targeted attack to be the next label
+    n_labels =  torch.unique(labels).size(0)
+    labels = (labels + 1) % n_labels
 
     if os.path.exists(savedir):
         print(f"Attack {foldername} has already been run")
         return 0
     
-    print("Attacking the test dataset...")
+    print(f"Attacking the {rootsubdir} dataset...")
     os.mkdir(savedir)
     count = 0
     origcount = 0
@@ -109,7 +114,7 @@ def generate_attack(attack, labels, foldername):
         adv_tensors = attack.forward(images, batch_labels)
         adv_images = tensor_to_image(adv_tensors)
         origcount = count
-
+        torch.cuda.empty_cache()
         for x, adv_image in enumerate(adv_images):
             adv_image.save(f"{savedir}/{subdir_arr}/{img_names[x]}")
         

@@ -44,12 +44,12 @@ def load_model():
     model.eval()
     return model
 
-def attack_celeb(attack, labels_arr, attackfolder):
+def attack_celeb(attack, labels_arr, attackfolder, rootsubdir="test"):
     '''
-    Attacking all the images in the /CelebA_HQ.../test folder.
+    Attacking all the images in the /CelebA_HQ.../{rootsubdir} folder.
     Stores attacked images into /CelebA_HQ.../attackfolder
     ''' 
-    attackstorch.generate_attack(attack, labels_arr, attackfolder)
+    attackstorch.generate_attack(attack, labels_arr, attackfolder, rootsubdir=rootsubdir)
 
 def defend_celeb(attackname, defense):
     '''
@@ -92,7 +92,7 @@ def defend_celeb(attackname, defense):
             count += 1
             df.to_csv(f"/home/grads/hassledw/StyleCLIP_Defense/CelebA_HQ-Labeled/StyleCLIP-{attackname}-detected.csv")
 
-def classify(subdir, model):
+def classify(subdir, model, count=200):
     '''
     Passes a subdirectory of images into the model, outputs
     an array of labels.
@@ -105,7 +105,7 @@ def classify(subdir, model):
     '''
     data_dir = f'{path}/StyleCLIP_Defense/CelebA_HQ_facial_identity_dataset'
     # num_files=len(os.listdir(f'{data_dir}/{subdir}'))
-    return cc.celebClassifier(data_dir, subdir, 200, model)
+    return cc.celebClassifier(data_dir, subdir, count, model)
 
 
 def main():
@@ -114,15 +114,16 @@ def main():
     defense = Defense()
 
     labels_test = classify("test", model)
-    attacknames = ["FGSM05", "FGSM10", "FGSM25", "PGD1010", "PGD2010", "PGD5050", "Jitter1010"]
-    attacks = [FGSM(model, eps=0.05), 
-               FGSM(model, eps=0.1), 
-               FGSM(model, eps=0.25), 
-               PGD(model, eps=0.1, alpha=0.1), 
-               PGD(model, eps=0.2, alpha=0.1), 
-               PGD(model, eps=0.5, alpha=0.5), 
-               Jitter(model, eps=0.10, alpha=0.10)]
-    
+    # attacknames = ["FGSM05", "FGSM10", "FGSM25", "PGD1010", "PGD2010", "PGD5050", "Jitter1010"]
+    # attacks = [FGSM(model, eps=0.05), 
+    #            FGSM(model, eps=0.1), 
+    #            FGSM(model, eps=0.25), 
+    #            PGD(model, eps=0.1, alpha=0.1), 
+    #            PGD(model, eps=0.2, alpha=0.1), 
+    #            PGD(model, eps=0.5, alpha=0.5), 
+    #            Jitter(model, eps=0.10, alpha=0.10)]
+    attacknames = ["FGSM05"]
+    attacks = [FGSM(model, eps=0.05)]
     for attackname, attack in zip(attacknames, attacks):
         attack_celeb(attack, labels_test, attackname)
         _ = classify(attackname, model)
