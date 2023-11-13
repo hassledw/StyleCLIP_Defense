@@ -76,8 +76,15 @@ def defend_celeb(attackname, defense):
             path = os.path.join(subdir, file)
             neutral = 'a face with skin'
             target = 'a face with clear skin' 
-            beta = 0.1 
-            alpha = 4.0
+            # beta = 0.1 
+            # alpha = 4.0
+            # Accuracy on StyleCLIP-test 63.96%
+            # beta = 0.13
+            # alpha = 4.0
+            # Accuracy on StyleCLIP-test 66.50%
+            beta = 0.13
+            alpha = 2.0
+            # Accuracy on StyleCLIP-test 68.53%
             try:
                 generated = defense.styleCLIP_def(neutral, target, alpha, beta, path)
                 generated.save(f'{savedir}/{subdir_arr}/{file}')
@@ -122,8 +129,14 @@ def main():
     #            PGD(model, eps=0.2, alpha=0.1), 
     #            PGD(model, eps=0.5, alpha=0.5), 
     #            Jitter(model, eps=0.10, alpha=0.10)]
-    attacknames = ["FGSM05"]
-    attacks = [FGSM(model, eps=0.05)]
+    
+    # runs styleclip on original test dataset (non-attacked).
+    defend_celeb("test", defense)
+    _ = classify(f"StyleCLIP-test", model)
+
+    # runs attack
+    attacknames = ["FGSM10"]
+    attacks = [FGSM(model, eps=0.10)]
     for attackname, attack in zip(attacknames, attacks):
         attack_celeb(attack, labels_test, attackname)
         _ = classify(attackname, model)
