@@ -74,8 +74,8 @@ def defend_celeb(attackname, defense):
         os.mkdir(f"{savedir}/{subdir_arr}")
         for i, file in enumerate(files):
             path = os.path.join(subdir, file)
-            neutral = 'a face with skin'
-            target = 'a face with clear skin' 
+            neutral = 'a face with noise'
+            target = 'a face without noise' 
             # beta = 0.1 
             # alpha = 4.0
             # Accuracy on StyleCLIP-test 63.96%
@@ -118,29 +118,17 @@ def classify(subdir, model, count=200):
 def main():
     model = load_model()
     model.to(device)
-    defense = Defense()
+    # defense = Defense()
 
-    labels_test = classify("test", model)
-    # attacknames = ["FGSM05", "FGSM10", "FGSM25", "PGD1010", "PGD2010", "PGD5050", "Jitter1010"]
-    # attacks = [FGSM(model, eps=0.05), 
-    #            FGSM(model, eps=0.1), 
-    #            FGSM(model, eps=0.25), 
-    #            PGD(model, eps=0.1, alpha=0.1), 
-    #            PGD(model, eps=0.2, alpha=0.1), 
-    #            PGD(model, eps=0.5, alpha=0.5), 
-    #            Jitter(model, eps=0.10, alpha=0.10)]
-    
-    # runs styleclip on original test dataset (non-attacked).
-    defend_celeb("test", defense)
-    _ = classify(f"StyleCLIP-test", model)
+    # labels_test = classify("test", model)
 
     # runs attack
-    attacknames = ["FGSM10"]
-    attacks = [FGSM(model, eps=0.10)]
+    attacknames = ["FGSM05", "FGSM10", "FGSM25", "FGSM50"]
+    attacks = [FGSM(model, eps=0.05), FGSM(model, eps=0.10), FGSM(model, eps=0.25), FGSM(model, eps=0.50)]
     for attackname, attack in zip(attacknames, attacks):
-        attack_celeb(attack, labels_test, attackname)
-        _ = classify(attackname, model)
-        defend_celeb(attackname, defense)
+        # attack_celeb(attack, labels_test, attackname)
+        # _ = classify(attackname, model)
+        # defend_celeb(attackname, defense)
         _ = classify(f"StyleCLIP-{attackname}", model)
 
 if __name__ == "__main__":
