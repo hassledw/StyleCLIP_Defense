@@ -123,8 +123,8 @@ def main():
     # labels_test = classify("test", model)
 
     # runs attack
-    attacknames = ["FGSM05", "FGSM10", "FGSM25", "FGSM50"]
-    attacks = [FGSM(model, eps=0.05), FGSM(model, eps=0.10), FGSM(model, eps=0.25), FGSM(model, eps=0.50)]
+    attacknames = ["FGSM10-p1", "FGSM10-p2", "FGSM10-p3", "FGSM10-p4", "FGSM10-ab1", "FGSM10-ab2", "FGSM10-ab3", "FGSM10-ab4", "test-ab1", "test-ab2", "test-ab3", "test-ab4"]
+    attacks = [FGSM(model, eps=0.05), FGSM(model, eps=0.10), FGSM(model, eps=0.25), FGSM(model, eps=0.50)] * 3
     for attackname, attack in zip(attacknames, attacks):
         # attack_celeb(attack, labels_test, attackname)
         # _ = classify(attackname, model)
