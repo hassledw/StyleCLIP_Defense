@@ -123,12 +123,12 @@ def main():
     labels_test = classify("test", model)
 
     # runs attack
-    attacknames = ["FGSM05", "FGSM10", "FGSM25", "FGSM50"]
+    attacknames = ["FGSM10-ab5", "test-ab5"]
     attacks = [FGSM(model, eps=0.05), FGSM(model, eps=0.10), FGSM(model, eps=0.25), FGSM(model, eps=0.50)]
     for attackname, attack in zip(attacknames, attacks):
-        attack_celeb(attack, labels_test, attackname)
-        _ = classify(attackname, model)
-        defend_celeb(attackname, defense)
+        # attack_celeb(attack, labels_test, attackname)
+        # _ = classify(attackname, model)
+        # defend_celeb(attackname, defense)
         _ = classify(f"StyleCLIP-{attackname}", model)
 
 if __name__ == "__main__":
