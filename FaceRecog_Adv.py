@@ -127,11 +127,11 @@ def main():
     # attacks = [FGSM(model, eps=0.90), PGD(model, eps=0.10, alpha=0.10),
     #            PGD(model, eps=0.20, alpha=0.10), PGD(model, eps=0.20, alpha=0.20), 
     #            PGD(model, eps=0.50, alpha=0.50)]
-    attacknames = ["FGSM75"]
+    attacknames = ["test"]
     attacks = [FGSM(model, eps=0.75)]
     
     for attackname, attack in zip(attacknames, attacks):
-        _ = classify(attackname, model)
+        # _ = classify(attackname, model)
         # defend_celeb(attackname, defense)
         _ = classify(f"StyleCLIP-{attackname}", model)
 
