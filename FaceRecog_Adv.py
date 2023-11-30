@@ -118,16 +118,20 @@ def classify(subdir, model, count=200):
 def main():
     model = load_model()
     model.to(device)
-    defense = Defense()
+    # defense = Defense()
 
     labels_test = classify("test", model)
 
     # runs attack
-    attacknames = ["FGSM10-ab5", "test-ab5"]
-    attacks = [FGSM(model, eps=0.05), FGSM(model, eps=0.10), FGSM(model, eps=0.25), FGSM(model, eps=0.50)]
+    # attacknames = ["FGSM90", "PGD1010", "PGD2010", "PGD2020", "PGD5050"]
+    # attacks = [FGSM(model, eps=0.90), PGD(model, eps=0.10, alpha=0.10),
+    #            PGD(model, eps=0.20, alpha=0.10), PGD(model, eps=0.20, alpha=0.20), 
+    #            PGD(model, eps=0.50, alpha=0.50)]
+    attacknames = ["FGSM75"]
+    attacks = [FGSM(model, eps=0.75)]
+    
     for attackname, attack in zip(attacknames, attacks):
-        # attack_celeb(attack, labels_test, attackname)
-        # _ = classify(attackname, model)
+        _ = classify(attackname, model)
         # defend_celeb(attackname, defense)
         _ = classify(f"StyleCLIP-{attackname}", model)
 
