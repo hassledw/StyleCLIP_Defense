@@ -67,7 +67,7 @@ git clone git@github.com:hassledw/StyleCLIP_Defense.git
 ```
 https://drive.google.com/file/d/1PlnKXhi--SjtLdXxR8gWlaI5tF5qpDhK/view?usp=sharing
 ```
-The ZIP folder in the source code environment download, titled "Source-Env-StyleCLIP_Defense.zip" contains our specific instance of StyleCLIP and encoder4editing, the specific envrionment instances we tweaked for our defense implementation. The changes we made to StyleCLIP is just path modifications. For our defense implementation in `defense.py`, please change the absolute path to the correct path on your machine.
+The ZIP folder in the source code environment download, titled "Source-Env-StyleCLIP_Defense.zip" contains our specific instance of StyleCLIP and encoder4editing, the specific envrionment instances we tweaked for our defense implementation. The only changes we made to StyleCLIP were path modifications. For our defense implementation in `defense.py`, please change the absolute path to the correct path on your machine.
 
 ## Instructions
 Our main driver file used to classify, run attacks, and generate defense images is `FaceRecog_Adv.py`. To run our full-stack framework, run this on a CUDA enabled GPU:
