@@ -6,6 +6,9 @@ import pandas as pd
 path = "/home/grads/hassledw"
 
 def celebClassifier(data_dir, subdir, num_files, model, save=True):
+    '''
+    passes celebrity data into the classifier for classification.
+    '''
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # device object
     transforms_test = transforms.Compose([
         transforms.Resize((256, 256)),

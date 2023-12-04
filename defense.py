@@ -21,7 +21,9 @@ from global_torch.manipulate import Manipulator
 from StyleCLIP.global_torch.StyleCLIP import GetDt, GetBoundary
 import dlib 
 from encoder4editing.utils.alignment import align_face
-
+'''
+StyleCLIP Defense framework. Utilizes OOB structure to call functions more efficiently.
+'''
 # ! pip install torch==1.7.1+cu110 torchvision==0.8.2+cu110 torchaudio==0.7.2 -f https://download.pytorch.org/whl/torch_stable.html 
 
 # !git clone https://github.com/omertov/encoder4editing.git $CODE_DIR
@@ -35,27 +37,42 @@ from encoder4editing.utils.alignment import align_face
 
 class Defense():
     def __init__(self):
+        '''
+        Initialization code for our defense.
+        '''
         self.experiment_type = 'ffhq_encode'
         self.M, self.EXPERIMENT_ARGS, self.model, self.fs3, self.resize_dims, self.net = self.preprocess()
 
     def display_alongside_source_image(self, result_image, source_image):
+        '''
+        Helper function.
+        '''
         res = np.concatenate([np.array(source_image.resize(self.resize_dims)),
                             np.array(result_image.resize(self.resize_dims))], axis=1)
         return Image.fromarray(res)
 
     def run_on_batch(self, inputs):
+        '''
+        Helper function.
+        '''
         images, latents = self.net(inputs.to("cuda").float(), randomize_noise=False, return_latents=True)
         if self.experiment_type == 'cars_encode':
             images = images[:, :, 32:224, :]
         return images, latents
 
     def run_alignment(self, image_path):
+        '''
+        Helper function.
+        '''
         predictor = dlib.shape_predictor("shape_predictor_68_face_landmarks.dat")
         aligned_image = align_face(filepath=image_path, predictor=predictor) 
         print("Aligned image has shape: {}".format(aligned_image.size))
         return aligned_image 
 
     def preprocess(self):
+        '''
+        Model preprocessing.
+        '''
         dataset_name='ffhq' 
 
         if not os.path.isfile('./model/'+dataset_name+'.pkl'):
@@ -114,6 +131,9 @@ class Defense():
         return (M, EXPERIMENT_ARGS, model, fs3, resize_dims, net)
 
     def styleCLIP_def(self, neutral, target, alpha, beta, image_path):
+        '''
+        Main StyleCLIP implementation code.
+        '''
         original_image = Image.open(image_path)
         original_image = original_image.convert("RGB")
         if self.experiment_type == "ffhq_encode" and 'shape_predictor_68_face_landmarks.dat' not in os.listdir():

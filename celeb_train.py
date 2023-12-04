@@ -10,7 +10,9 @@ import matplotlib.pyplot as plt
 
 import time
 import os
-
+'''
+Classifier training code for the CelebA_HQ dataset.
+'''
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu") # device object
 
