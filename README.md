@@ -18,7 +18,7 @@ Here is an example of our defense at work:
 * **celeb_metrics.ipynb**: code containing all metrics of our attacks and defense.
 * **celeb_train.py**: code to train the CelebAHQ classifier.
 * **defense.py**: our StyleCLIP defense implementation, adapted from StyleCLIP's source code. Note: in our environment, we stored this file under `StyleCLIP` and created a symlink to it in our repo due to pathing issues we encountered.
-* **CelebA_HQ-Labeled**: a folder containing all of our test, attack, and defense classifications in CSV files.
+* **facial_identity_classification_transfer_learning_with_ResNet18.pth**: our trained weights path for the ResNet18 model.
   
 ## Dataset
 Since StyleCLIP is limited to face data, we are running all of our evaluations on the [CelebA_HQ](https://github.com/ndb796/CelebA-HQ-Face-Identity-and-Attributes-Recognition-PyTorch) dataset. This dataset is specifically used for facial recognition; classifier details are in the CelebA_HQ github link.
@@ -71,12 +71,25 @@ To get StyleCLIP successfully working, navigate to the [StyleCLIP repo](https://
 ```
 git clone git@github.com:orpatashnik/StyleCLIP.git
 ```
-### Clone Repo
-Next, clone our repo according to the tree structure above. This should be in the same parent directory as StyleCLIP.
+### Add Our StyleCLIP_Defense Framework
+Extract the tar.gz file according to the tree structure above. The extracted contents should be in the same parent directory as StyleCLIP.
+```
+tar -xvf StyleCLIP_Defense_v04122023.tar.gz
+```
+
+Alternatively, you can clone [our repo](https://github.com/hassledw/StyleCLIP_Defense) into the location from the tree structure above. This should be in the same parent directory as StyleCLIP.
 ```
 git clone git@github.com:hassledw/StyleCLIP_Defense.git
 ```
-### Source Code Environment Download
+
+### Data Download
+Next, navigate to the StyleCLIP_Defense directory. Below, we've included a link to the `CelebA_HQ_facial_identity_dataset` folder that contains our test, train, attacked, and defended data used in on our evaluation, and we've also included `CelebA_HQ-Labeled`, the classification CSV files of all the data. The link to the download is indicated below:
+```
+https://drive.google.com/file/d/1Kei621c-NkxFkArg0IQK7DfuFgY7xcuK/view?usp=sharing
+```
+NOTE: the `image_path` column contains absolute paths, so in your environment, it would be beneficial to reclassify it with our code using the `classify()` method (Example use-case in the instruction section).
+
+### Alternative Source Code Environment Download
 Alternatively, if StyleCLIP setup is causing problems, we have our own instance linked to this google drive link:
 ```
 https://drive.google.com/file/d/1PlnKXhi--SjtLdXxR8gWlaI5tF5qpDhK/view?usp=sharing
