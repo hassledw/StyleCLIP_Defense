@@ -6,11 +6,20 @@
 
 
 ## Introduction
-Deep learning adversarial attacks such as FGSM (fast gradient sign method), a white-box approach aimed to misclassify images on image classifiers, can do serious damage to the trustworthiness of deep learning classification models. Our goal is to defend against such attacks using StyleCLIP as an image denoising/detection tool. 
+Deep learning adversarial attacks such as FGSM (fast gradient sign method), a white-box approach aimed to misclassify images on image classifiers, can do serious damage to the trustworthiness of deep learning classification models. Our goal is to defend against such attacks using StyleCLIP as an image denoising/detection tool.
 
-![image](https://github.com/hassledw/StyleCLIP_Defense/assets/72363518/dbee92af-5e26-4ab0-8a87-e52c8892a6fd)\
-**FGSM Attack on Macaw**
+Here is an example of our defense at work:
 
+![image](figures/adv_class_change_example.png)
+
+## StyleCLIP_Defense Main File Contents
+* **attackstorch.py**: this is our attack method file, callable for several different torch attack methods.
+* **celeb_classifier.py**: contains the method that passes data through for classification.
+* **celeb_metrics.ipynb**: code containing all metrics of our attacks and defense.
+* **celeb_train.py**: code to train the CelebAHQ classifier.
+* **defense.py**: our StyleCLIP defense implementation, adapted from StyleCLIP's source code. Note: in our environment, we stored this file under `StyleCLIP` and created a symlink to it in our repo due to pathing issues we encountered.
+* **CelebA_HQ-Labeled**: a folder containing all of our test, attack, and defense classifications in CSV files.
+  
 ## Dataset
 Since StyleCLIP is limited to face data, we are running all of our evaluations on the [CelebA_HQ](https://github.com/ndb796/CelebA-HQ-Face-Identity-and-Attributes-Recognition-PyTorch) dataset. This dataset is specifically used for facial recognition; classifier details are in the CelebA_HQ github link.
 
@@ -57,13 +66,18 @@ Here are some notes about our environment. We did all of our development on a li
     ├── README.md
     └── resources
 ```
-### Clone Repo
+### Setup StyleCLIP
+To get StyleCLIP successfully working, navigate to the [StyleCLIP repo](https://github.com/orpatashnik/StyleCLIP) and follow the setup instructions. The final result of this setup should resemble our pathing structure listed above.
 ```
-# Clone our git repo
+git clone git@github.com:orpatashnik/StyleCLIP.git
+```
+### Clone Repo
+Next, clone our repo according to the tree structure above. This should be in the same parent directory as StyleCLIP.
+```
 git clone git@github.com:hassledw/StyleCLIP_Defense.git
 ```
-
 ### Source Code Environment Download
+Alternatively, if StyleCLIP setup is causing problems, we have our own instance linked to this google drive link:
 ```
 https://drive.google.com/file/d/1PlnKXhi--SjtLdXxR8gWlaI5tF5qpDhK/view?usp=sharing
 ```
@@ -92,3 +106,7 @@ If you would like to modify this result, navigate to the `main()` method. Here i
         _ = classify(f"StyleCLIP-{attackname}", model)
 ```
 The output of the attacked and generated defended images should be placed in a folder called `CelebA_HQ_facial_identity_dataset` with the respective name. An attacked foldername should be of naming convention `AttackXX` and the defense folder name should be of naming convention `StyleCLIP-AttackXX`.
+
+## More Examples of our Defense
+![image](figures/sanitiz_example_05.png)
+![image](figures/face_detection_example_90.png)
